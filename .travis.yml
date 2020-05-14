@@ -1,14 +1,48 @@
+sudo: required
+
 language: bash
 
 before_install:
-  - sudo apt-get update && sudo apt-get install -y shellcheck
+  - sudo apt-get update
+  - sudo apt-get update -q
+  - export scversion="stable"
+  - wget "https://storage.googleapis.com/shellcheck/shellcheck-${scversion}.linux.x86_64.tar.xz"
+  - tar --xz -xvf shellcheck-"${scversion}".linux.x86_64.tar.xz
+  - sudo cp shellcheck-"${scversion}"/shellcheck /usr/bin/
+  - /usr/bin/shellcheck --version
+
+  - sudo apt-get install imagemagick
+  - wget "https://c4pr1c3.github.io/LinuxSysAdmin/exp/chap0x04/worldcupplayerinfo.tsv"
+  - wget "https://c4pr1c3.github.io/LinuxSysAdmin/exp/chap0x04/web_log.tsv.7z"
+  - sudo apt install p7zip-full
+  - 7z x web_log.tsv.7z
 
 script:
-  - ls -l
-  - bash tesh.sh
-  - ls -l
+  - bash chap0x04/mission1.sh -h
+  - bash chap0x04/mission1.sh -d chap0x04/images -c 80
+  - bash chap0x04/mission1.sh -d chap0x04/images -t
+  - bash chap0x04/mission1.sh -d chap0x04/images -s 25%
+  - bash chap0x04/mission1.sh -d chap0x04/images -a black 50 azurehpz
+  - bash chap0x04/mission1.sh -d chap0x04/images -n 3021
+  - printf "\n"
+  - bash chap0x04/mission2.sh -h
+  - bash chap0x04/mission2.sh -c
+  - bash chap0x04/mission2.sh -p
+  - bash chap0x04/mission2.sh -n
+  - bash chap0x04/mission2.sh -a
+  - printf "\n"
+  - bash chap0x04/mission3.sh
+
+after_script:
+  - /usr/bin/shellcheck mission1.sh
+  - /usr/bin/shellcheck mission2.sh
+  - /usr/bin/shellcheck mission3.sh
+
+after_failure:
+  - id
   - pwd
-  - cat file
+  - df -h
+  - cat error.log
 
 notifications:
   email:

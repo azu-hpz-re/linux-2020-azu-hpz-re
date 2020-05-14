@@ -20,12 +20,12 @@
 
 - 名字最长的球员是谁？名字最短的球员是谁？
 
-   - 名字最长的是 Lazaros Christodoulopoulos
-   - 名字最短的是 Jefferson
+   - 名字最长的是 Francisco Javier Rodriguez，Lazaros Christodoulopoulos，Liassine Cadamuro-Bentaeba
+   - 名字最短的是 Jô
 
 - 年龄最大的球员是谁？年龄最小的球员是谁？
    - 年龄最大的是 Faryd Mondragon
-   - 年龄最小的是 Fabrice Olinga
+   - 年龄最小的是 Fabrice Olinga，Luke Shaw
 
 ## Web服务器访问日志
 - 统计访问来源主机TOP 100和分别对应出现的总次数

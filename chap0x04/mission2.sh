@@ -2,128 +2,149 @@
 
 # count the number and percentage of players in different age ranges
 function count_age {
+  age=$(awk -F "\t" '{if (NR > 1) {print $6} }' worldcupplayerinfo.tsv )
   count_20=0
   count_20to30=0
   count_30=0
-  i=0
+  total=0
   for i in ${age[@]};do
-    if [ $i -lt 20 ]
+    if [[ $i -lt 20 ]];
     then
     ((count_20++))
-    elif [ $i -gt 30 ]
+    elif [[ $i -gt 30 ]];
     then
     ((count_30++))
-    elif [ $i -ge 20 ] || [ $i -le 30 ]
+    elif [[ $i -ge 20 ]] || [[ $i -le 30 ]]
     then 
     ((count_20to30++))
     fi
+    total=$((total+1))
   done
   
-  printf "The number of players under 20 is %-5d,accounting for %-10.6f%% \n" $count_20 $(echo "scale=10;$count_20/$count*100" | bc -l | awk '{printf "%f",$0}')
-  printf "The number of players between 20 to 30 is %-5d,accounting for %-10.6f%% \n" $count_20to30 $(echo "scale=10;$count_20to30/$count*100" | bc -l | awk '{printf "%f",$0}')
-  printf "The number of players over 30 is %-5d,accounting for %-10.6f%% \n" $count_30 $(echo "scale=10;$count_30/$count*100" | bc -l | awk '{printf "%f",$0}')
+  printf "The number of players under 20 is %-5d,accounting for %-10.6f%% \n" $count_20 $(echo "scale=10;$count_20/$total*100" | bc -l | awk '{printf "%f",$0}')
+  printf "The number of players between 20 to 30 is %-5d,accounting for %-10.6f%% \n" $count_20to30 $(echo "scale=10;$count_20to30/$total*100" | bc -l | awk '{printf "%f",$0}')
+  printf "The number of players over 30 is %-5d,accounting for %-10.6f%% \n" $count_30 $(echo "scale=10;$count_30/$total*100" | bc -l | awk '{printf "%f",$0}')
 }
 
 # count the number and the percentage of players in different positions on the field
 function count_positions {
-#vRs:Array assignment,remove the unnecessary spaces
-    array=($(awk -vRS=' ' '!a[$1]++' <<< "${position[@]}"))
-    i=0
+      array=$(awk -F "\t" '{if (NR > 1) {print $5} }' worldcupplayerinfo.tsv )       total=0
     #声明关联数组，索引为球员位置
     declare -A member
-    for((i=0;i<${#array[@]};i++))
-    {
-        m=${array[$i]}
-        member["$m"]=0
-    }
-    for some in "${position[@]}";do
-       case $some in
-               ${array[0]})
-                    ((member["${array[0]}"]++));;
-               ${array[1]})
-                    ((member["${array[1]}"]++));;
-               ${array[2]})
-                    ((member["${array[2]}"]++));;
-               ${array[3]})
-                    ((member["${array[3]}"]++));;
-               ${array[4]})
-                    ((member["${array[4]}"]++));;
-               esac
+    for m in ${array[@]};do
+           if [[ ${member[$m]} ]];then
+                   member[$m]=$((member[$m]+1))
+           else
+                   member[$m]=1
+           fi
+           total=$((total+1))
     done
-    printf "%-10s : %10s %15s  \n" "Position" "Number" "Percent"
-    for((i=0;i<${#array[@]};i++))
-    {
-        t=${member[${array[$i]}]}
-        printf "%-10s : %10d %15.8f %% \n" ${array[$i]} $t $(echo "scale=10; $t/$count*100" | bc -l | awk '{printf "%f", $0}')
-    }
+   
+    echo "Position	Num	Ratio"
+    for key in "${!member[@]}";do
+            echo "$key     ${member[$key]}     $(echo "${member[$key]} $total" | awk '{printf("%0.1f\n",$1/$2*100)}')%"
+    done
+    printf "\n"
 }
 
 #统计名字最长和最短的球员
 function name_by_length {
-    i=0
+    OLD_IFS="$IFS"
+    string=$(awk -F "\t" '{if (NR > 1){print $9","} }' worldcupplayerinfo.tsv )
+    IFS=","
+    
+    player=($string)
+    IFS="$OLD_IFS"
     max_name=0;
-    min_name=0;
-    while [[ i -lt $count ]]
+    min_name=100;
+    for i in "${player[@]}";
     do
       #去掉字符串中的*
-      name=${player[$i]//\*/}
-      l=${#name}
-      if [[ l -gt max_name ]];then
-              max_name=$l
-              max_num=$i
-      elif [[ n -lt min_name ]];then
-              min_name=$n
-              min_num=$i
-      fi
-      ((i++))
-    done
-    echo "The longest name is ${player[max_num]//\*/ }"
-    echo "The shortest name is ${player[min_num]}"
-}
+            if [[ ${#i} -gt $max_name ]];then
+                    max_name=${#i}
+            fi
 
+            if [[ ${#i} -lt $min_name ]];then
+                    min_name=${#i}
+            fi
+    done
+
+    echo "The longest name:"
+    for i in "${player[@]}";do
+            if [[ ${#i} -eq $max_name ]];then
+                    echo $i
+            fi
+    done
+
+    printf "\n"
+
+    echo "The shortest name:"
+    for i in "${player[@]}";do
+            if [[ ${#i} -eq $min_name ]];then
+                    echo $i
+            fi
+    done
+    printf "\n"
+}
 #统计年龄最大和最小的球员
 function count_by_age {
+    age=$(awk -F "\t" '{if (NR > 1) {print $6} }' worldcupplayerinfo.tsv )
     oldest=0;
     youngest=100;
-    i=0
-    while [[ i -lt $count ]];
+
+    for a in ${age[@]};
     do
-             a=age[$i]
-             if [[ a -gt $oldest ]];then
+            if [[ $a -gt $oldest ]];then
                    oldest=$a
-                   max_num=$i
-             elif [[ a -lt $youngest ]];then
+            fi
+
+            if [[ $a -lt $youngest ]];then
                    youngest=$a
-                   min_num=$i
-             fi
-             ((i++))
+            fi
     done
-    echo "The oldest player is ${player[max_num]//\*/ }"
-    echo "The youngest player is ${player[min_num]//\*/ }"
+    echo "The oldest player is:"
+    awk -F "\t" '$6=='$oldest' {print $9}' worldcupplayerinfo.tsv
+    printf "\n"
+    echo "The youngest player is:"
+    awk -F "\t" '$6=='$youngest' {print $9}' worldcupplayerinfo.tsv
+    printf "\n"
 }
 
-# main function
-count=0
-#按行读取数据
-while read line
-do ((count++))
-if [[ $count -gt 1 ]];then
-        str=(${line// /*})
-        position[$(($count-2))]=${str[4]}
-        age[$(($count-2))]=${str[5]}
-        player[$(($count-2))]=${str[8]}
+#help
+function Help {
+	echo "the options:"
+        echo "-c:	Count the number and percentage of players in different age ranges (under 20, [20-30], over 30)"
+        echo "-p:	Count the number and percentage of players in different positions on the field"
+        echo "-n:	Count the players with the longest name and shortest name"
+	echo "-a:	Count the oldest and youngest players"
+        echo "-h:	get the help of the opetions"
+}
+
+if [[ $# -lt 1 ]];then
+        echo "Please enter your command."
+else
+        while [[ $# -ne 0 ]];do
+                case $1 in
+                        "-a")
+                                count_by_age #统计年龄最大和最小的球员
+                                shift
+                                ;;
+                        "-h")
+                                Help #获得命令行参数帮助信息
+                                shift
+                                ;;
+                        "-n")
+                                name_by_length #统计名字最长和最短的球员
+                                shift
+                                ;;
+                        "-p")
+                                count_positions #统计球场不同位置的球员人数、占比
+                                shift
+                                ;;
+                        "-c")
+                                count_age #统计不同年龄范围的球员认识、占比
+                                shift
+                                ;;
+                esac
+        done
 fi
-done < worldcupplayerinfo.tsv
-count=$(($count-1))
-echo "The number of array is :$count"
-echo "--------------------------------"
-count_age 
-echo "--------------------------------"
-count_positions
-echo "--------------------------------"
-name_by_length
-echo "--------------------------------"
-count_by_age
-echo "--------------------------------"
-
-
